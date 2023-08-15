@@ -8,6 +8,8 @@ pub fn App(cx: Scope) -> impl IntoView {
     let (scan_signal, scan_set) = create_signal(cx, false);
     let checkbox_ref = create_node_ref::<Input>(cx);
 
+    let (result_signal, set_result) = create_signal(cx, "".to_string());
+
     view! { cx,
         <Title text="QR Scanner Demo"/>
 
@@ -15,6 +17,7 @@ pub fn App(cx: Scope) -> impl IntoView {
             active=scan_signal
             on_scan=move |a| {
                 log!("scanned: {}", &a);
+                set_result.set(a);
             }
         />
         "Scan "
@@ -26,6 +29,7 @@ pub fn App(cx: Scope) -> impl IntoView {
                 scan_set.set(checked);
             }
         />
+        <p>"Scan result: " {result_signal} </p>
   }
 }
 

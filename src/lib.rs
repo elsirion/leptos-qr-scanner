@@ -3,9 +3,8 @@
 use std::sync::Arc;
 use leptos::*;
 use js_sys::Object;
-use leptos_meta::{Script, Title, Stylesheet, provide_meta_context};
+use leptos_meta::Script;
 use leptos::html::Video;
-use leptos::html::Input;
 
 use wasm_bindgen::prelude::*;
 
@@ -52,8 +51,6 @@ pub fn Scan<A, F>(cx: Scope, active: A, on_scan: F) -> impl IntoView
         A: SignalGet<bool> + 'static,
         F: Fn(String) + 'static,
 {
-    provide_meta_context(cx);
-
     let video_ref = create_node_ref::<Video>(cx);
     let (error, set_error) = create_signal(cx, None);
 
