@@ -16,6 +16,7 @@ pub fn App(cx: Scope) -> impl IntoView {
                 log!("scanned: {}", &a);
                 set_result.set(a);
             }
+            class=""
         />
         "Scan "
         <input

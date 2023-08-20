@@ -45,7 +45,7 @@ pub fn process_js_value_with_cast(js_value: JsValue) -> Result<String, JsValue> 
 }
 
 #[component]
-pub fn Scan<A, F>(cx: Scope, active: A, on_scan: F) -> impl IntoView
+pub fn Scan<A, F>(cx: Scope, active: A, on_scan: F, class: &'static str) -> impl IntoView
     where
         A: SignalGet<bool> + 'static,
         F: Fn(String) + 'static,
@@ -112,7 +112,9 @@ pub fn Scan<A, F>(cx: Scope, active: A, on_scan: F) -> impl IntoView
             src="https://unpkg.com/qr-scanner@1.4.2/qr-scanner.legacy.min.js"
             on:load=move |_| set_ready.set(true)
         />
-        <div>
+        <div
+          class=class
+        >
           <video _ref=video_ref></video>
           <Show
             when=move || error.get().is_some()
