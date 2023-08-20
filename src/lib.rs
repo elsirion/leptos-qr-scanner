@@ -3,7 +3,6 @@
 use std::sync::Arc;
 use leptos::*;
 use js_sys::Object;
-use leptos_meta::Script;
 use leptos::html::Video;
 
 use wasm_bindgen::prelude::*;
@@ -53,6 +52,7 @@ pub fn Scan<A, F>(cx: Scope, active: A, on_scan: F) -> impl IntoView
 {
     let video_ref = create_node_ref::<Video>(cx);
     let (error, set_error) = create_signal(cx, None);
+    let (ready, set_ready) = create_signal(cx, false);
 
     let o_scanner: StoredValue<Option<QrScanner>> = store_value(cx, None);
 
@@ -100,7 +100,7 @@ pub fn Scan<A, F>(cx: Scope, active: A, on_scan: F) -> impl IntoView
     };
 
     create_effect(cx, move |_| {
-        if active.get() {
+        if ready.get() && active.get() {
             scan();
         } else {
             cancel();
@@ -108,7 +108,10 @@ pub fn Scan<A, F>(cx: Scope, active: A, on_scan: F) -> impl IntoView
     });
 
     view! { cx,
-        <Script src="https://unpkg.com/qr-scanner@1.4.2/qr-scanner.legacy.min.js" />
+        <script
+            src="https://unpkg.com/qr-scanner@1.4.2/qr-scanner.legacy.min.js"
+            on:load=move |_| set_ready.set(true)
+        />
         <div>
           <video _ref=video_ref></video>
           <Show

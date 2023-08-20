@@ -1,18 +1,15 @@
 use leptos::*;
 use leptos_qr_scanner::Scan;
 use leptos::html::Input;
-use leptos_meta::Title;
 
 #[component]
 pub fn App(cx: Scope) -> impl IntoView {
-    let (scan_signal, scan_set) = create_signal(cx, false);
+    let (scan_signal, scan_set) = create_signal(cx, true);
     let checkbox_ref = create_node_ref::<Input>(cx);
 
     let (result_signal, set_result) = create_signal(cx, "".to_string());
 
     view! { cx,
-        <Title text="QR Scanner Demo"/>
-
         <Scan
             active=scan_signal
             on_scan=move |a| {
@@ -24,6 +21,7 @@ pub fn App(cx: Scope) -> impl IntoView {
         <input
             type="checkbox"
             ref=checkbox_ref
+            checked
             on:change=move |_e| {
                 let checked = checkbox_ref.get().expect("<input> to exist").checked();
                 scan_set.set(checked);
