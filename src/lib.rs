@@ -1,9 +1,9 @@
 // Extracted from https://github.com/sectore/fm-faucet-leptos/blob/main/src/component/scan.rs by  Jens K./sectore, licensed under MIT License
 
-use std::sync::Arc;
-use leptos::*;
 use js_sys::Object;
 use leptos::html::Video;
+use leptos::*;
+use std::sync::Arc;
 
 use wasm_bindgen::prelude::*;
 
@@ -45,16 +45,16 @@ pub fn process_js_value_with_cast(js_value: JsValue) -> Result<String, JsValue> 
 }
 
 #[component]
-pub fn Scan<A, F>(cx: Scope, active: A, on_scan: F, class: &'static str) -> impl IntoView
-    where
-        A: SignalGet<bool> + 'static,
-        F: Fn(String) + 'static,
+pub fn Scan<A, F>(active: A, on_scan: F, class: &'static str) -> impl IntoView
+where
+    A: SignalGet<Value = bool> + 'static,
+    F: Fn(String) + 'static,
 {
-    let video_ref = create_node_ref::<Video>(cx);
-    let (error, set_error) = create_signal(cx, None);
-    let (ready, set_ready) = create_signal(cx, false);
+    let video_ref = create_node_ref::<Video>();
+    let (error, set_error) = create_signal(None);
+    let (ready, set_ready) = create_signal(false);
 
-    let o_scanner: StoredValue<Option<QrScanner>> = store_value(cx, None);
+    let o_scanner: StoredValue<Option<QrScanner>> = store_value(None);
 
     let on_scan = Arc::new(on_scan);
     let scan = move || {
@@ -81,7 +81,7 @@ pub fn Scan<A, F>(cx: Scope, active: A, on_scan: F, class: &'static str) -> impl
                 &JsValue::from_str("returnDetailedScanResult"),
                 &JsValue::from_bool(true),
             )
-                .unwrap();
+            .unwrap();
 
             let scanner = QrScanner::new(&video, callback.as_ref().unchecked_ref(), &options);
             scanner.start();
@@ -99,7 +99,7 @@ pub fn Scan<A, F>(cx: Scope, active: A, on_scan: F, class: &'static str) -> impl
         }
     };
 
-    create_effect(cx, move |_| {
+    create_effect(move |_| {
         if ready.get() && active.get() {
             scan();
         } else {
@@ -107,25 +107,25 @@ pub fn Scan<A, F>(cx: Scope, active: A, on_scan: F, class: &'static str) -> impl
         }
     });
 
-    view! { cx,
-        <script
-            src="https://unpkg.com/qr-scanner@1.4.2/qr-scanner.legacy.min.js"
-            on:load=move |_| set_ready.set(true)
-        />
-        <div
-          class=class
-        >
-          <video _ref=video_ref></video>
-          <Show
-            when=move || error.get().is_some()
-            fallback=|_| {
-                view! { cx, "" }
-            }
+    view! {
+          <script
+              src="https://unpkg.com/qr-scanner@1.4.2/qr-scanner.legacy.min.js"
+              on:load=move |_| set_ready.set(true)
+          />
+          <div
+            class=class
           >
-            <p>
-              {error.get()}
-            </p>
-          </Show>
-        </div>
-  }
+            <video _ref=video_ref></video>
+            <Show
+              when=move || error.get().is_some()
+              fallback=|| {
+                  view! { "" }
+              }
+            >
+              <p>
+                {error.get()}
+              </p>
+            </Show>
+          </div>
+    }
 }
