@@ -115,7 +115,11 @@ where
           <div
             class=class
           >
-            <video _ref=video_ref></video>
+            <video
+              _ref=video_ref
+              class="max-w-full max-h-full"
+              style="object-fit: cover;"
+            ></video>
             <Show
               when=move || error.get().is_some()
               fallback=|| {
