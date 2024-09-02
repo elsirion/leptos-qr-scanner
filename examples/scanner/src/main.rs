@@ -18,6 +18,7 @@ pub fn App() -> impl IntoView {
                   set_result.set(a);
               }
               class=""
+              video_class=""
           />
           "Scan "
           <input

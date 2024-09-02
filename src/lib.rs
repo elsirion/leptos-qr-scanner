@@ -7,24 +7,33 @@ use std::sync::Arc;
 
 use wasm_bindgen::prelude::*;
 
-#[wasm_bindgen]
+#[wasm_bindgen(module = "/public/qr-scanner-worker.min.js")]
+extern "C" {
+    #[derive(Clone, Debug)]
+    type QrWorker;
+
+    #[wasm_bindgen(method, js_name = createWorker)]
+    fn createWorker(this: &QrWorker);
+}
+
+#[wasm_bindgen(module = "/public/qr-scanner-wrapper.min.js")]
 extern "C" {
     #[derive(Clone, Debug)]
     type QrScanner;
 
-    #[wasm_bindgen(constructor)]
-    fn new(
+    #[wasm_bindgen(constructor, js_name = new)]
+    fn qr_new(
         video_elem: &web_sys::HtmlVideoElement,
         callback: &js_sys::Function,
         options: &JsValue,
     ) -> QrScanner;
 
     #[wasm_bindgen(method, js_name = start)]
-    fn start(this: &QrScanner);
+    fn qr_start(this: &QrScanner);
     #[wasm_bindgen(method, js_name = stop)]
-    fn stop(this: &QrScanner);
+    fn qr_stop(this: &QrScanner);
     #[wasm_bindgen(method, js_name = destroy)]
-    fn destroy(this: &QrScanner);
+    fn qr_destroy(this: &QrScanner);
 }
 
 #[wasm_bindgen]
@@ -45,14 +54,18 @@ pub fn process_js_value_with_cast(js_value: JsValue) -> Result<String, JsValue> 
 }
 
 #[component]
-pub fn Scan<A, F>(active: A, on_scan: F, class: &'static str) -> impl IntoView
+pub fn Scan<A, F>(
+    active: A,
+    on_scan: F,
+    class: &'static str,
+    video_class: &'static str,
+) -> impl IntoView
 where
     A: SignalGet<Value = bool> + 'static,
     F: Fn(String) + 'static,
 {
     let video_ref = create_node_ref::<Video>();
     let (error, set_error) = create_signal(None);
-    let (ready, set_ready) = create_signal(false);
 
     let o_scanner: StoredValue<Option<QrScanner>> = store_value(None);
 
@@ -83,8 +96,8 @@ where
             )
             .unwrap();
 
-            let scanner = QrScanner::new(&video, callback.as_ref().unchecked_ref(), &options);
-            scanner.start();
+            let scanner = QrScanner::qr_new(&video, callback.as_ref().unchecked_ref(), &options);
+            scanner.qr_start();
             callback.forget();
 
             o_scanner.set_value(Some(scanner));
@@ -93,14 +106,14 @@ where
 
     let cancel = move || {
         if let Some(scanner) = o_scanner.get_value() {
-            scanner.stop();
-            scanner.destroy();
+            scanner.qr_stop();
+            scanner.qr_destroy();
             o_scanner.set_value(None);
         }
     };
 
     create_effect(move |_| {
-        if ready.get() && active.get() {
+        if active.get() {
             scan();
         } else {
             cancel();
@@ -108,28 +121,16 @@ where
     });
 
     view! {
-          <script
-              src="https://unpkg.com/qr-scanner@1.4.2/qr-scanner.legacy.min.js"
-              on:load=move |_| set_ready.set(true)
-          />
-          <div
-            class=class
-          >
-            <video
-              _ref=video_ref
-              class="max-w-full max-h-full"
-              style="object-fit: cover;"
-            ></video>
+        <div class=class>
+            <video _ref=video_ref class=video_class style="object-fit: cover;"></video>
             <Show
-              when=move || error.get().is_some()
-              fallback=|| {
-                  view! { "" }
-              }
+                when=move || error.get().is_some()
+                fallback=|| {
+                    view! { "" }
+                }
             >
-              <p>
-                {error.get()}
-              </p>
+                <p>{error.get()}</p>
             </Show>
-          </div>
+        </div>
     }
 }
