@@ -1,6 +1,4 @@
 target
-examples/scanner/target
 dist
-examples/scanner/dist
 /Cargo.lock
 .DS_Store
