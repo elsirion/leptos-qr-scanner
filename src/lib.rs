@@ -1,10 +1,15 @@
 // Extracted from https://github.com/sectore/fm-faucet-leptos/blob/main/src/component/scan.rs by  Jens K./sectore, licensed under MIT License
 
 use js_sys::Object;
-use leptos::html::Video;
+use leptos::prelude::ClassAttribute;
+use leptos::prelude::ElementChild;
+use leptos::prelude::NodeRefAttribute;
+use leptos::prelude::StyleAttribute;
+use leptos::prelude::{
+    Effect, Get, NodeRef, ReadValue, Set, SetValue, Show, StoredValue, WriteValue, signal,
+};
 use leptos::*;
 use std::sync::Arc;
-
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen(module = "/public/qr-scanner-worker.min.js")]
@@ -61,13 +66,13 @@ pub fn Scan<A, F>(
     video_class: &'static str,
 ) -> impl IntoView
 where
-    A: SignalGet<Value = bool> + 'static,
+    A: Get<Value = bool> + 'static,
     F: Fn(String) + 'static,
 {
-    let video_ref = create_node_ref::<Video>();
-    let (error, set_error) = create_signal(None);
+    let video_ref = NodeRef::new();
+    let (error, set_error) = signal(None);
 
-    let o_scanner: StoredValue<Option<QrScanner>> = store_value(None);
+    let o_scanner: StoredValue<Option<QrScanner>, _> = StoredValue::new_local(None);
 
     let on_scan = Arc::new(on_scan);
     let scan = move || {
@@ -100,19 +105,19 @@ where
             scanner.qr_start();
             callback.forget();
 
-            o_scanner.set_value(Some(scanner));
+            *o_scanner.write_value() = Some(scanner);
         }
     };
 
     let cancel = move || {
-        if let Some(scanner) = o_scanner.get_value() {
+        if let Some(scanner) = o_scanner.read_value().clone() {
             scanner.qr_stop();
             scanner.qr_destroy();
             o_scanner.set_value(None);
         }
     };
 
-    create_effect(move |_| {
+    Effect::new(move |_| {
         if active.get() {
             scan();
         } else {
@@ -122,7 +127,7 @@ where
 
     view! {
         <div class=class>
-            <video _ref=video_ref class=video_class style="object-fit: cover;"></video>
+            <video node_ref=video_ref class=video_class style="object-fit: cover;"></video>
             <Show
                 when=move || error.get().is_some()
                 fallback=|| {

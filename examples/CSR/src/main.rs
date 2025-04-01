@@ -1,9 +1,10 @@
-use leptos::html::Input;
+use leptos::html::{Input};
 use leptos::logging::log;
-use leptos::*;
+use leptos::prelude::*;
 use leptos_meta::*;
 use leptos_qr_scanner::Scan;
-use leptos_router::*;
+
+use leptos_router::{path, components::*};
 
 fn main() {
     _ = console_log::init_with_level(log::Level::Debug);
@@ -21,14 +22,14 @@ pub fn App() -> impl IntoView {
     provide_meta_context();
 
     view! {
-        <Html lang="en" dir="ltr" attr:data-theme="light" />
+        <Html {..} lang="en" dir="ltr" attr:data-theme="light" />
         <Title text="Welcome to Leptos QRScanner CSR" />
         <Meta charset="UTF-8" />
         <Meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
         <Router>
-            <Routes>
-                <Route path="/" view=Page />
+            <Routes fallback=|| "not found">
+                <Route path=path!("/") view=Page />
             </Routes>
         </Router>
     }
@@ -36,10 +37,11 @@ pub fn App() -> impl IntoView {
 
 #[component]
 pub fn Page() -> impl IntoView {
-    let (scan_signal, scan_set) = create_signal(false);
-    let checkbox_ref = create_node_ref::<Input>();
+    let (scan_signal, scan_set) = signal(false);
 
-    let (result_signal, set_result) = create_signal("".to_string());
+    let checkbox_ref = NodeRef::<Input>::new();
+
+    let (result_signal, set_result) = signal("".to_string());
 
     view! {
         <h1>QRScanner CSR</h1>
@@ -56,7 +58,7 @@ pub fn Page() -> impl IntoView {
             Scan
             <input
                 type="checkbox"
-                ref=checkbox_ref
+                node_ref=checkbox_ref
                 on:change=move |_e| {
                     let checked = checkbox_ref.get().expect("<input> to exist").checked();
                     scan_set.set(checked);
